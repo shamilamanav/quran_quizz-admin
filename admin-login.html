@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quran Quizz - Admin Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Minimal White Palette */
+            --theme-primary: #6c5ce7; /* Soft Purple/Blue */
+            --theme-secondary: #a29bfe;
+            --theme-accent: #0984e3;
+            --theme-bg: #ffffff;
+            --theme-card-bg: #ffffff;
+            --theme-text-main: #2d3436;
+            --theme-text-sub: #636e72;
+            --theme-border: #dfe6e9;
+            --theme-input-bg: #f5f6fa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--theme-bg);
+            /* Preserved Grid Pattern */
+            background-image: linear-gradient(rgba(140, 62, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(140, 62, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            overflow: hidden;
+            color: var(--theme-text-main);
+        }
+
+        /* ANIMATIONS */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95); /* White semi-transparent */
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid var(--theme-border);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08); /* Soft shadow */
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            opacity: 0;
+            animation: fadeInScale 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            animation-delay: 0.1s;
+        }
+
+        /* Staggered Children */
+        .login-header, .input-group, .submit-btn {
+            opacity: 0;
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        .login-header { animation-delay: 0.2s; }
+        .input-group:nth-of-type(1) { animation-delay: 0.3s; }
+        .input-group:nth-of-type(2) { animation-delay: 0.4s; }
+        .submit-btn { animation-delay: 0.5s; }
+
+        .login-header { text-align: center; margin-bottom: 10px; }
+        
+        .login-header h2 { 
+            color: var(--theme-primary); 
+            font-weight: 700; 
+            font-size: 28px;
+            letter-spacing: 1px;
+        }
+        
+        .login-header p { color: var(--theme-text-sub); font-size: 14px; margin-top: 5px; }
+
+        .input-group { position: relative; margin-bottom: 15px; }
+        .input-group label { display: block; margin-bottom: 8px; color: var(--theme-text-main); font-size: 14px; font-weight: 500; }
+        
+        .input-group input {
+            width: 100%; 
+            padding: 12px 15px; 
+            border: 1px solid var(--theme-border); 
+            border-radius: 10px; 
+            font-size: 15px; 
+            transition: all 0.3s ease; 
+            outline: none; 
+            background: var(--theme-input-bg);
+            color: var(--theme-text-main);
+        }
+        
+        .input-group input:focus { 
+            border-color: var(--theme-primary); 
+            background: #fff; 
+            box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.1); 
+        }
+
+        .submit-btn {
+            width: 100%; 
+            padding: 14px; 
+            background: var(--theme-primary); 
+            color: white; 
+            font-size: 16px; 
+            font-weight: 600; 
+            border: none; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+        }
+        
+        .submit-btn:hover { 
+            background: #5b4cc4;
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4); 
+        }
+        
+        .submit-btn:active { transform: translateY(0); }
+        .submit-btn:disabled { background: #b2bec3; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .error-msg {
+            color: #d63031;
+            font-size: 13px;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h2>Admin Portal</h2>
+            <p>Enter your credentials to access the dashboard</p>
+        </div>
+        <form id="loginForm">
+            <div class="input-group">
+                <label for="username">Admin Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter username" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Admin Password</label>
+                <input type="password" id="password" name="password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="submit-btn" id="loginBtn">Secure Login</button>
+            <p class="error-msg" id="errorMsg">Invalid admin credentials</p>
+        </form>
+    </div>
+
+    <script type="module">
+        // Import Firebase SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+  apiKey: "AIzaSyBeR15vw2HsNqwQ2JvlW1CrZKI4NfkDTLI",
+  authDomain: "quran-33341.firebaseapp.com",
+  projectId: "quran-33341",
+  storageBucket: "quran-33341.firebasestorage.app",
+  messagingSenderId: "514331851436",
+  appId: "1:514331851436:web:11c900e5023801378abd09",
+  measurementId: "G-5E2WB40V37"
+};
+
+      
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Login Logic
+        const loginForm = document.getElementById('loginForm');
+        const errorMsg = document.getElementById('errorMsg');
+        const loginBtn = document.getElementById('loginBtn');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Reset UI
+            errorMsg.style.display = 'none';
+            loginBtn.textContent = "Checking...";
+            loginBtn.disabled = true;
+
+            const usernameInput = document.getElementById('username').value.trim();
+            const passwordInput = document.getElementById('password').value.trim();
+
+            try {
+                // --- STRICT ADMIN CHECK ONLY ---
+                const adminRef = collection(db, "admin");
+                const qAdmin = query(adminRef, where("username", "==", usernameInput));
+                const adminSnapshot = await getDocs(qAdmin);
+
+                let foundAdmin = false;
+                adminSnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    // Check password
+                    if (data.password === passwordInput) {
+                        foundAdmin = true;
+                    }
+                });
+
+                if (foundAdmin) {
+                    // Save Role for Protection
+                    localStorage.setItem("user_role", "admin");
+                    
+                    window.location.href = 'admin.html';
+                } else {
+                    // If not an admin, immediately fail. Do not check candidates.
+                    throw new Error("Invalid admin credentials");
+                }
+
+            } catch (error) {
+                console.error("Login Error:", error);
+                errorMsg.textContent = "Invalid Admin Username or Password";
+                errorMsg.style.display = 'block';
+                loginBtn.textContent = "Secure Login";
+                loginBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

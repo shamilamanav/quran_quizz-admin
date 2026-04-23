@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quran Quizz - Student Submissions</title>
+    
+
+    <meta charset="UTF-8">
+    <script>
+        (function() {
+            const role = localStorage.getItem("user_role");
+            if (role !== "admin") {
+                window.location.href = "admin-index.html";
+            }
+        })();
+    </script>
+
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600&family=Noto+Sans+Malayalam:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        /* MINIMAL WHITE THEME */
+        :root {
+            --theme-primary: #6c5ce7;
+            --theme-primary-hover: #5b4cc4;
+            --theme-bg: #ffffff;
+            --theme-card-bg: #ffffff;
+            --theme-text-main: #2d3436;
+            --theme-text-sub: #636e72;
+            --theme-border: #dfe6e9;
+            --theme-danger: #d63031;
+            --theme-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            --theme-input-bg: #f5f6fa;
+            --theme-success-bg: rgba(0, 184, 148, 0.1);
+            --theme-success-text: #00b894;
+        }
+
+        /* --- GLOBAL STYLES --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--theme-bg);
+            /* Preserved Grid Pattern */
+            background-image: linear-gradient(rgba(140, 62, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(140, 62, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            color: var(--theme-text-main);
+            min-height: 100vh;
+            padding-bottom: 40px;
+        }
+
+        /* --- HEADER DESIGN --- */
+        .navbar {
+            max-width: 1100px;
+            margin: 20px auto 30px auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            border-radius: 16px;
+            box-shadow: var(--theme-shadow);
+            border: 1px solid var(--theme-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
+
+        .navbar h1 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--theme-primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+        }
+
+        .header-btn {
+            background: var(--theme-primary);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-btn:hover {
+            transform: translateY(-2px);
+            background: var(--theme-primary-hover);
+            box-shadow: 0 6px 20px rgba(108, 92, 231, 0.5);
+        }
+
+        /* --- CONTAINER --- */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* --- LIST VIEW STYLES (Table) --- */
+        .dashboard-card {
+            background: var(--theme-card-bg);
+            border-radius: 16px;
+            box-shadow: var(--theme-shadow);
+            border: 1px solid var(--theme-border);
+            overflow: hidden;
+            animation: fadeIn 0.8s ease-out;
+            margin-bottom: 2rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .table-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--theme-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .table-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--theme-primary);
+            letter-spacing: 0.5px;
+        }
+
+        /* SORT CONTROLS */
+        .sort-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: var(--theme-input-bg);
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--theme-border);
+        }
+
+        .sort-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--theme-text-sub);
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            color: var(--theme-text-main);
+        }
+
+        .radio-option input[type="radio"] {
+            accent-color: var(--theme-primary);
+            cursor: pointer;
+        }
+
+        .table-wrapper { width: 100%; overflow-x: auto; }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+
+        th {
+            background-color: var(--theme-primary);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 1.2rem;
+        }
+
+        td {
+            padding: 1rem 1.2rem;
+            border-bottom: 1px solid var(--theme-border);
+            font-size: 0.9rem;
+            color: var(--theme-text-main);
+            vertical-align: middle;
+        }
+
+        tr:last-child td { border-bottom: none; }
+        
+        tbody tr { transition: background-color 0.2s; }
+        tbody tr:hover { background-color: #f9f9f9; }
+        
+        .row-read td { color: var(--theme-text-sub); }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge-success { 
+            background-color: var(--theme-success-bg); 
+            color: var(--theme-success-text); 
+            border: 1px solid var(--theme-success-text);
+        } 
+        .badge-warning { 
+            background-color: rgba(214, 48, 49, 0.1); 
+            color: var(--theme-danger); 
+            border: 1px solid var(--theme-danger);
+        } 
+        .badge-read { 
+            background-color: var(--theme-input-bg); 
+            color: var(--theme-text-sub); 
+            border: 1px solid var(--theme-border); 
+        } 
+        .badge-neutral {
+             color: var(--theme-text-sub);
+             border: 1px solid var(--theme-border);
+        }
+
+        /* Actions Column */
+        .actions-flex { display: flex; align-items: center; gap: 8px; }
+
+        .action-btn {
+            background-color: rgba(108, 92, 231, 0.1);
+            color: var(--theme-primary);
+            padding: 0.4rem 1rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            white-space: nowrap;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+        .action-btn:hover { 
+            background-color: var(--theme-primary); 
+            color: #fff; 
+        }
+
+        .icon-btn {
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .btn-read { color: var(--theme-text-sub); border: 1px solid transparent; }
+        .btn-read:hover { color: var(--theme-primary); }
+        .row-read .btn-read { color: var(--theme-primary); }
+
+        /* Delete Button */
+        .btn-delete { color: var(--theme-text-sub); border: 1px solid transparent; }
+        .btn-delete:hover { 
+            color: var(--theme-danger); 
+        }
+
+        /* --- EXPORT BUTTONS --- */
+        .export-controls {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            padding: 0 0 20px 0;
+            margin-top: -10px;
+        }
+
+        .export-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .export-excel {
+            background: #27ae60;
+            box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3);
+        }
+        .export-excel:hover {
+            transform: translateY(-2px);
+            background: #219150;
+            box-shadow: 0 6px 15px rgba(39, 174, 96, 0.4);
+        }
+
+        /* --- DETAIL VIEW STYLES --- */
+        .student-header {
+            background: var(--theme-card-bg);
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            border: 1px solid var(--theme-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--theme-shadow);
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .student-info h2 { 
+            font-size: 1.5rem; 
+            font-weight: 700; 
+            color: var(--theme-primary); 
+            margin-bottom: 0.2rem; 
+        }
+
+        .score-card {
+            background: rgba(108, 92, 231, 0.05);
+            border: 1px solid var(--theme-primary);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            text-align: right;
+        }
+        .score-val { font-size: 1.8rem; font-weight: 700; color: var(--theme-primary); }
+        .score-label { font-size: 0.75rem; color: var(--theme-text-sub); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+
+        .section-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--theme-text-sub);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 2.5rem 0 1.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .section-title::after { content: ""; flex: 1; height: 1px; background: var(--theme-border); }
+
+        .mcq-item {
+            background: var(--theme-card-bg);
+            border: 1px solid var(--theme-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 1.5rem;
+            transition: all 0.2s;
+        }
+        .mcq-item:hover { transform: translateX(5px); border-color: var(--theme-primary); }
+        
+        .mcq-item.correct { border-left: 4px solid var(--theme-success-text); }
+        .mcq-item.wrong { border-left: 4px solid var(--theme-danger); }
+        .mcq-item.skipped { border-left: 4px solid var(--theme-text-sub); }
+
+        .q-num { font-weight: 600; color: var(--theme-text-sub); font-size: 1rem; min-width: 30px; }
+        .q-content { flex: 1; }
+        .q-text { font-weight: 500; color: var(--theme-text-main); font-size: 1.05rem; margin-bottom: 0.5rem; line-height: 1.5; }
+        .q-ans { font-size: 0.9rem; color: var(--theme-text-sub); }
+        .q-status { font-size: 0.85rem; font-weight: 700; white-space: nowrap; letter-spacing: 0.5px; }
+        
+        .st-correct { color: var(--theme-success-text); }
+        .st-wrong { color: var(--theme-danger); }
+        .st-skip { color: var(--theme-text-sub); }
+
+        .part-a-summary {
+            background: rgba(108, 92, 231, 0.05);
+            border: 1px solid var(--theme-primary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            text-align: center;
+            color: var(--theme-primary);
+            font-weight: 600;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+        .part-a-score { font-size: 1.5rem; font-weight: 800; color: var(--theme-primary); }
+
+        .desc-item {
+            background: var(--theme-card-bg);
+            border: 1px solid var(--theme-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .desc-header {
+            font-size: 0.85rem; font-weight: 700; color: var(--theme-text-sub); margin-bottom: 0.75rem;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .desc-question { font-size: 1.1rem; font-weight: 600; color: var(--theme-text-main); margin-bottom: 1rem; }
+        .desc-response {
+            width: 100%; padding: 1.2rem; background: var(--theme-input-bg); border: 1px solid var(--theme-border);
+            border-radius: 8px; color: var(--theme-text-main); font-size: 1rem; line-height: 1.6;
+        }
+
+        .loading { text-align: center; padding: 4rem; color: var(--theme-primary); font-size: 1.1rem; }
+        .hidden { display: none !important; }
+        
+        /* Inner Back Button Style */
+        .inner-back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--theme-text-sub);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 50px;
+            transition: all 0.3s;
+            background: #fff;
+            border: 1px solid var(--theme-border);
+            margin-bottom: 20px;
+        }
+        .inner-back-btn:hover { color: var(--theme-primary); border-color: var(--theme-primary); }
+
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <h1 id="page-title">Submissions</h1>
+        <button id="header-action-btn" class="header-btn" onclick="handleHeaderAction()">
+            Dashboard
+        </button>
+    </nav>
+
+    <div class="container">
+        
+        <div id="loader" class="loading">Loading data...</div>
+
+        <div id="listView" class="dashboard-card hidden">
+            <div class="table-header">
+                <div>
+                    <div class="table-title">Recent Exam Submissions</div>
+                    <div class="badge badge-neutral" id="record-count" style="margin-top: 5px; font-weight: normal;">0 Records</div>
+                </div>
+
+                <div class="sort-controls">
+                    <span class="sort-label">Sort By:</span>
+                    <label class="radio-option">
+                        <input type="radio" name="sortType" value="score" onchange="applySort()"> 
+                        Score
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="sortType" value="time" checked onchange="applySort()"> 
+                        Time
+                    </label>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>Student Info</th>
+                            <th>Submitted At</th>
+                            <th>Status</th>
+                            <th>Score (Est.)</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="submissions-body">
+                        </tbody>
+                </table>
+            </div>
+            
+            <div style="padding: 1.5rem; background: var(--theme-input-bg); border-top: 1px solid var(--theme-border);">
+                <div class="export-controls" style="margin: 0; padding: 0;">
+                    <button class="export-btn export-excel" onclick="exportToExcel()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        Export to Excel
+                    </button>
+                    </div>
+            </div>
+            </div>
+
+        <div id="detailView" class="hidden">
+            
+            <button class="inner-back-btn" onclick="showListView()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Back to List
+            </button>
+
+            <div class="student-header">
+                <div class="student-info">
+                    <h2 id="st-name">Student Name</h2>
+                    <div id="st-place" style="font-size: 0.95rem; color: var(--theme-text-sub); margin-bottom: 8px; font-weight: 500;"></div>
+                    <div id="st-status-badge"></div>
+                </div>
+                <div class="score-card">
+                    <div class="score-val" id="total-score">0</div>
+                    <div class="score-label">MCQ Score</div>
+                </div>
+            </div>
+
+            <div class="section-title">Part A — Multiple Choice</div>
+            <div id="mcq-container"></div>
+            
+            <div id="part-a-summary" class="part-a-summary">
+                <span>Part A Total Score:</span>
+                <span class="part-a-score" id="part-a-score-val">0 / 0</span>
+            </div>
+
+            <div class="section-title">Part B — Descriptive</div>
+            <div id="desc-container"></div>
+
+        </div>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy, updateDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+       const firebaseConfig = {
+            apiKey: "AIzaSyBeR15vw2HsNqwQ2JvlW1CrZKI4NfkDTLI",
+            authDomain: "quran-33341.firebaseapp.com",
+            projectId: "quran-33341",
+            storageBucket: "quran-33341.firebasestorage.app",
+            messagingSenderId: "514331851436",
+            appId: "1:514331851436:web:11c900e5023801378abd09",
+            measurementId: "G-5E2WB40V37"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let questionsCache = {}; 
+        let allSubmissions = []; 
+        let currentView = 'list'; 
+
+        window.handleHeaderAction = function() {
+            if (currentView === 'list') {
+                window.location.href = 'admin.html';
+            } else {
+                showListView();
+            }
+        };
+
+        window.showListView = function() {
+            currentView = 'list';
+            document.getElementById('detailView').classList.add('hidden');
+            document.getElementById('listView').classList.remove('hidden');
+            document.getElementById('page-title').textContent = "Submissions";
+            const btn = document.getElementById('header-action-btn');
+            btn.textContent = "Dashboard";
+        };
+
+        window.showDetailView = async function(id) {
+            currentView = 'detail';
+            document.getElementById('listView').classList.add('hidden');
+            document.getElementById('page-title').textContent = "Answer Sheet";
+            const btn = document.getElementById('header-action-btn');
+            btn.textContent = "Back";
+
+            await loadDetailView(id);
+        };
+
+        window.onload = async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const submissionId = urlParams.get('id');
+
+            try {
+                await fetchQuestions();
+                await loadListData(); 
+
+                if (submissionId) {
+                    window.showDetailView(submissionId);
+                } else {
+                    document.getElementById('listView').classList.remove('hidden');
+                    document.getElementById('loader').classList.add('hidden');
+                }
+
+            } catch (error) {
+                console.error("Init Error:", error);
+                document.getElementById('loader').textContent = "Error loading data.";
+            }
+        };
+
+        async function fetchQuestions() {
+            const qSnap = await getDocs(collection(db, "questions"));
+            qSnap.forEach(doc => {
+                questionsCache[doc.id] = { id: doc.id, ...doc.data() };
+            });
+        }
+
+        async function loadListData() {
+            const q = query(collection(db, "submissions")); 
+            const snapshot = await getDocs(q);
+
+            document.getElementById('record-count').textContent = `${snapshot.size} Records`;
+            
+            allSubmissions = [];
+
+            let totalMcqQuestions = 0;
+            Object.values(questionsCache).forEach(q => { if(q.type === 'mcq') totalMcqQuestions++; });
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                
+                // --- SCORING LOGIC (Negative marking removed) ---
+                let score = 0;
+                if (data.answers) {
+                    Object.values(questionsCache).forEach(q => {
+                        if (q.type === 'mcq') {
+                            const studentAns = data.answers[q.id];
+                            
+                            if (studentAns === q.answer) {
+                                // Correct Answer: +1
+                                score += 1;
+                            } 
+                            // Wrong/Empty Answer: 0 (No deduction)
+                        }
+                    });
+                }
+
+                allSubmissions.push({
+                    id: doc.id,
+                    ...data,
+                    calculatedScore: score, // Store as float
+                    totalMcq: totalMcqQuestions,
+                    dateObj: data.submittedAt ? data.submittedAt.toDate() : new Date(0)
+                });
+            });
+
+            applySort();
+        }
+
+        window.applySort = function() {
+            const sortType = document.querySelector('input[name="sortType"]:checked').value;
+            if (sortType === 'score') {
+                allSubmissions.sort((a, b) => b.calculatedScore - a.calculatedScore);
+            } else {
+                allSubmissions.sort((a, b) => b.dateObj - a.dateObj); // Sort by most recent
+            }
+            renderTable();
+        };
+
+        function renderTable() {
+            const tbody = document.getElementById('submissions-body');
+            tbody.innerHTML = '';
+
+            if (allSubmissions.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem; color: var(--theme-text-sub);">No submissions found.</td></tr>`;
+                return;
+            }
+
+            allSubmissions.forEach((item, index) => {
+                const time = item.dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                const day = item.dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const dateStr = `<strong>${time}</strong><br><span style="font-size:0.8rem; color: var(--theme-text-sub);">${day}</span>`;
+
+                let statusBadge = "";
+                const isRead = item.isRead === true;
+                if(isRead) {
+                    statusBadge = `<span class="badge badge-read">Reviewed</span>`;
+                } else if (item.status === 'flagged') {
+                    statusBadge = `<span class="badge badge-warning">Flagged</span>`;
+                } else {
+                    statusBadge = `<span class="badge badge-success">Verified</span>`;
+                }
+
+                const rowClass = isRead ? 'row-read' : '';
+                
+                // Format score to 2 decimals
+                const displayScore = item.calculatedScore.toFixed(2);
+
+                const tr = document.createElement('tr');
+                tr.className = rowClass;
+                tr.id = `row-${item.id}`;
+                tr.dataset.originalStatus = item.status || 'verified'; 
+
+                tr.innerHTML = `
+                    <td style="font-weight: 600; color: var(--theme-primary);">${index + 1}</td> 
+                    <td>
+                        <div style="font-weight:600; color: var(--theme-text-main);">${item.name || 'Unknown'}</div>
+                        <div style="font-size:0.8rem; color:var(--theme-text-sub);">📍 ${item.place || 'N/A'}</div>
+                    </td>
+                    <td style="color:var(--theme-text-sub); font-size:0.9rem;">${dateStr}</td>
+                    <td>${statusBadge}</td>
+                    <td style="font-weight:600;">${displayScore} / ${item.totalMcq}</td>
+                    <td>
+                        <div class="actions-flex" style="justify-content: flex-end;">
+                            <button onclick="showDetailView('${item.id}')" class="action-btn">View</button>
+                            
+                            <button onclick="toggleReadStatus('${item.id}')" class="icon-btn btn-read" title="Toggle Read Status">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </button>
+                            
+                            <button onclick="deleteSubmission('${item.id}')" class="icon-btn btn-delete" title="Archive / Delete">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.toggleReadStatus = async (id) => {
+            const row = document.getElementById(`row-${id}`);
+            if (!row) return;
+
+            const isCurrentlyRead = row.classList.contains('row-read');
+            const newReadState = !isCurrentlyRead;
+            const cellStatus = row.cells[3]; 
+            
+            if (newReadState) {
+                row.classList.add('row-read');
+                cellStatus.innerHTML = `<span class="badge badge-read">Reviewed</span>`;
+            } else {
+                row.classList.remove('row-read');
+                const orig = row.dataset.originalStatus;
+                cellStatus.innerHTML = orig === 'flagged' 
+                    ? `<span class="badge badge-warning">Flagged</span>` 
+                    : `<span class="badge badge-success">Verified</span>`;
+            }
+
+            const subIndex = allSubmissions.findIndex(s => s.id === id);
+            if(subIndex > -1) allSubmissions[subIndex].isRead = newReadState;
+
+            try { await updateDoc(doc(db, "submissions", id), { isRead: newReadState }); } catch (error) {}
+        };
+
+        window.deleteSubmission = async (id) => {
+            if(!confirm("Are you sure you want to archive this submission? It will be moved to the 'archived_submissions' collection.")) return;
+            
+            try {
+                const docRef = doc(db, "submissions", id);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    await setDoc(doc(db, "archived_submissions", id), data);
+                    await deleteDoc(docRef);
+
+                    const row = document.getElementById(`row-${id}`);
+                    if(row) row.remove();
+                    allSubmissions = allSubmissions.filter(s => s.id !== id);
+                    document.getElementById('record-count').textContent = `${allSubmissions.length} Records`;
+                    
+                    console.log("Submission archived successfully.");
+                } else {
+                    alert("Document no longer exists.");
+                }
+            } catch (error) { 
+                console.error("Error archiving submission:", error);
+                alert("Failed to archive submission. Check console for details."); 
+            }
+        };
+
+        async function loadDetailView(id) {
+            const detailDiv = document.getElementById('detailView');
+            const loader = document.getElementById('loader');
+            
+            if(detailDiv.innerHTML === '') loader.classList.remove('hidden');
+
+            const docRef = doc(db, "submissions", id);
+            const docSnap = await getDoc(docRef);
+
+            if (!docSnap.exists()) {
+                alert("Submission not found");
+                showListView();
+                return;
+            }
+
+            const sub = docSnap.data();
+            const answers = sub.answers || {};
+
+            document.getElementById('st-name').textContent = sub.name;
+            document.getElementById('st-place').textContent = `📍 ${sub.place || 'Location not provided'}`;
+            
+            const badgeDiv = document.getElementById('st-status-badge');
+            if(sub.status === 'flagged') {
+                badgeDiv.innerHTML = `<span class="badge badge-warning">⚠️ Flagged: ${sub.reason}</span>`;
+            } else {
+                badgeDiv.innerHTML = `<span class="badge badge-success">✅ Verified: ${sub.reason || 'Normal Submission'}</span>`;
+            }
+
+            const mcqContainer = document.getElementById('mcq-container');
+            const descContainer = document.getElementById('desc-container');
+            
+            mcqContainer.innerHTML = '';
+            descContainer.innerHTML = '';
+
+            let currentScore = 0;
+            let maxScore = 0;
+            let qIndex = 1;
+
+            const questionsArr = Object.values(questionsCache); 
+
+            questionsArr.forEach(q => {
+                const studentAns = answers[q.id];
+
+                if (q.type === 'mcq') {
+                    maxScore++;
+                    let statusClass = "skipped";
+                    let statusText = "Skipped";
+                    let ansText = "No Answer Selected";
+
+                    if (studentAns) {
+                        const optText = q.options[studentAns] || "";
+                        ansText = `Option ${studentAns}: ${optText}`;
+
+                        // --- MODIFIED DETAIL LOGIC (No Negative Marking) ---
+                        if (studentAns === q.answer) {
+                            currentScore += 1;
+                            statusClass = "correct";
+                            statusText = "Correct";
+                        } else {
+                            // Negative marking removed
+                            statusClass = "wrong";
+                            statusText = "Incorrect";
+                        }
+                    }
+
+                    const html = `
+                        <div class="mcq-item ${statusClass}">
+                            <div class="q-num">Q${qIndex}</div>
+                            <div class="q-content">
+                                <div class="q-text">${q.text}</div>
+                                <div class="q-ans">Answered: <span style="font-weight:500;">${ansText}</span></div>
+                                ${statusClass !== 'correct' && q.answer ? `<div style="font-size:0.85rem; color: var(--theme-text-sub); margin-top:4px;">Correct: Option ${q.answer}</div>` : ''}
+                            </div>
+                            <div class="q-status st-${statusClass === 'skipped' ? 'skip' : statusClass}">${statusText}</div>
+                        </div>
+                    `;
+                    mcqContainer.innerHTML += html;
+
+                } else {
+                    const html = `
+                        <div class="desc-item">
+                            <div class="desc-header">Question ${qIndex}</div>
+                            <div class="desc-question">${q.text}</div>
+                            <div class="desc-response" dir="auto">${studentAns || "No answer provided."}</div>
+                        </div>
+                    `;
+                    descContainer.innerHTML += html;
+                }
+                qIndex++;
+            });
+
+            // Update scores with 2 decimal format
+            const finalScoreStr = currentScore.toFixed(2);
+            document.getElementById('total-score').textContent = `${finalScoreStr} / ${maxScore}`;
+            document.getElementById('part-a-score-val').textContent = `${finalScoreStr} / ${maxScore}`;
+
+            loader.classList.add('hidden');
+            detailDiv.classList.remove('hidden');
+        }
+
+        // ============================================
+        //  EXCEL EXPORT FUNCTION
+        // ============================================
+
+        window.exportToExcel = function() {
+            if (!allSubmissions || allSubmissions.length === 0) {
+                alert("No data to export");
+                return;
+            }
+
+            const exportData = allSubmissions.map((s, index) => {
+                const dateStr = s.dateObj ? s.dateObj.toLocaleString() : 'N/A';
+                
+                // Format score in export
+                const scoreFormatted = (typeof s.calculatedScore === 'number') 
+                                        ? s.calculatedScore.toFixed(2) 
+                                        : s.calculatedScore;
+
+                return {
+                    "#": index + 1,
+                    "Student Name": s.name || 'Unknown',
+                    "Place": s.place || 'N/A',
+                    "Submitted At": dateStr,
+                    "Status": s.status || 'Verified',
+                    "Score": scoreFormatted + " / " + s.totalMcq
+                };
+            });
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            
+            const wscols = [
+                {wch: 5},  // Index
+                {wch: 25}, // Name
+                {wch: 20}, // Place
+                {wch: 25}, // Date
+                {wch: 15}, 
+                {wch: 10}  
+            ];
+            ws['!cols'] = wscols;
+
+            XLSX.utils.book_append_sheet(wb, ws, "Submissions");
+            XLSX.writeFile(wb, "Quran Quizz_Submissions.xlsx");
+        };
+
+    </script>
+</body>
+</html>
