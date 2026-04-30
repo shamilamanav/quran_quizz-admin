@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quran Quizz - Student Submissions</title>
+    <title>Student Submissions - Aqlathon</title>
     
 
     <meta charset="UTF-8">
@@ -510,7 +510,8 @@
             <div class="student-header">
                 <div class="student-info">
                     <h2 id="st-name">Student Name</h2>
-                    <div id="st-place" style="font-size: 0.95rem; color: var(--theme-text-sub); margin-bottom: 8px; font-weight: 500;"></div>
+                    <div id="st-place" style="font-size: 0.95rem; color: var(--theme-text-sub); margin-bottom: 4px; font-weight: 500;"></div>
+                    <div id="st-phone" style="font-size: 0.95rem; color: var(--theme-text-sub); margin-bottom: 12px; font-weight: 500;"></div>
                     <div id="st-status-badge"></div>
                 </div>
                 <div class="score-card">
@@ -793,8 +794,23 @@
             const sub = docSnap.data();
             const answers = sub.answers || {};
 
+            // Fetch Phone Number from Candidates Collection
+            let phoneStr = "Not Available";
+            if (sub.userId && sub.userId !== 'guest') {
+                try {
+                    const candidateRef = doc(db, "candidate", sub.userId);
+                    const candidateSnap = await getDoc(candidateRef);
+                    if (candidateSnap.exists() && candidateSnap.data().Phone) {
+                        phoneStr = candidateSnap.data().Phone;
+                    }
+                } catch (err) {
+                    console.error("Error fetching phone:", err);
+                }
+            }
+
             document.getElementById('st-name').textContent = sub.name;
             document.getElementById('st-place').textContent = `📍 ${sub.place || 'Location not provided'}`;
+            document.getElementById('st-phone').textContent = `📞 ${phoneStr}`;
             
             const badgeDiv = document.getElementById('st-status-badge');
             if(sub.status === 'flagged') {
@@ -911,13 +927,13 @@
                 {wch: 25}, // Name
                 {wch: 20}, // Place
                 {wch: 25}, // Date
-                {wch: 15}, 
-                {wch: 10}  
+                {wch: 15}, // Status
+                {wch: 10}  // Score
             ];
             ws['!cols'] = wscols;
 
             XLSX.utils.book_append_sheet(wb, ws, "Submissions");
-            XLSX.writeFile(wb, "Quran Quizz_Submissions.xlsx");
+            XLSX.writeFile(wb, "Aqlathon_Submissions.xlsx");
         };
 
     </script>
